@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PoE 双路径套利计算器（含路径 A/B）</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 960px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 25px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+    .panel {
+      flex: 1;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+    .panel-title {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #2980b9;
+      font-size: 18px;
+    }
+    .step {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    input {
+      width: 90px;
+      padding: 6px;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(to right, #3498db, #2980b9);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    #result {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      margin-top: 20px;
+    }
+    .profit { color: #27ae60; font-weight: bold; }
+    .loss { color: #e74c3c; }
+    .info {
+      font-size: 13px;
+      color: #7f8c8d;
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+  </style>
+<title>PoE 双路径套利计算器</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Path of Exile 双路径套利计算器：自动计算混沌石 ↔ 神圣石双向利润，支持最小整数可行方案。">
+</head>
+<body>
+  <h1>🔄 Path of Exile 自定义三步套利计算器</h1>
+
+  <div class="container">
+    <!-- 路径 A -->
+    <div class="panel">
+      <div class="panel-title">🔁 路径 A：混沌 → 预兆 → 神圣 → 混沌</div>
+      <div class="step">
+        <label>1. 花 [ ] 混沌 → 得 [ ] 预兆</label>
+        <div class="input-group">
+          <input type="number" id="a_spend1" value="190" step="any"> 
+          <span>→</span>
+          <input type="number" id="a_get1" value="1" step="any">
+        </div>
+      </div>
+      <div class="step">
+        <label>2. 花 [ ] 预兆 → 得 [ ] 神圣</label>
+        <div class="input-group">
+          <input type="number" id="a_spend2" value="1" step="any">
+          <span>→</span>
+          <input type="number" id="a_get2" value="9" step="any">
+        </div>
+      </div>
+      <div class="step">
+        <label>3. 花 [ ] 神圣 → 得 [ ] 混沌</label>
+        <div class="input-group">
+          <input type="number" id="a_spend3" value="1" step="any">
+          <span>→</span>
+          <input type="number" id="a_get3" value="20" step="any">
+        </div>
+      </div>
+    </div>
+
+    <!-- 路径 B -->
+    <div class="panel">
+      <div class="panel-title">🔁 路径 B：神圣 → 预兆 → 混沌 → 神圣</div>
+      <div class="step">
+        <label>1. 花 [ ] 神圣 → 得 [ ] 预兆</label>
+        <div class="input-group">
+          <input type="number" id="b_spend1" value="9" step="any">
+          <span>→</span>
+          <input type="number" id="b_get1" value="1" step="any">
+        </div>
+      </div>
+      <div class="step">
+        <label>2. 花 [ ] 预兆 → 得 [ ] 混沌</label>
+        <div class="input-group">
+          <input type="number" id="b_spend2" value="1" step="any">
+          <span>→</span>
+          <input type="number" id="b_get2" value="190" step="any">
+        </div>
+      </div>
+      <div class="step">
+        <label>3. 花 [ ] 混沌 → 得 [ ] 神圣</label>
+        <div class="input-group">
+          <input type="number" id="b_spend3" value="20" step="any">
+          <span>→</span>
+          <input type="number" id="b_get3" value="1" step="any">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button onclick="calculateAll()">🧮 计算双向套利（含理论利润）</button>
+
+  <div id="result"></div>
+
+  <div class="info">
+    <p><strong>使用说明：</strong></p>
+    <ul>
+      <li>每行表示：<strong>“花 X [通货] → 得 Y [通货]”</strong></li>
+      <li>路径 A：从混沌出发，最终换回混沌；路径 B：从神圣出发，最终换回神圣</li>
+      <li>工具先计算理论利润率，再搜索 k=1~1000 的最小整数可行方案</li>
+      <li>利润 ≥1 个起始通货才视为有效套利</li>
+    </ul>
+  </div>
+
+  <script>
+    function isPositiveNumber(x) {
+      return !isNaN(x) && x > 0;
+    }
+
+    function calculatePath(s1, g1, s2, g2, s3, g3, startName) {
+      if (!isPositiveNumber(s1) || !isPositiveNumber(g1) ||
+          !isPositiveNumber(s2) || !isPositiveNumber(g2) ||
+          !isPositiveNumber(s3) || !isPositiveNumber(g3)) {
+        return { error: '输入无效' };
+      }
+
+      // 理论产出（每 1 单位起始通货）
+      const theoreticalOutput = (g1 / s1) * (g2 / s2) * (g3 / s3);
+      const profitRate = theoreticalOutput - 1;
+
+      const result = {
+        theoreticalOutput,
+        profitRate,
+        feasible: null
+      };
+
+      if (profitRate <= 0) {
+        return result;
+      }
+
+      // 尝试 k = 1 到 1000
+      for (let k = 1; k <= 1000; k++) {
+        const inputStart = k * s1;
+        const prophecy = k * g1;
+        // Step 2: 预兆必须能被 s2 整除
+        if (Math.abs(prophecy % s2) > 1e-9) continue;
+        const groups2 = prophecy / s2;
+        const middle = groups2 * g2; // 神圣（路径A）或混沌（路径B）
+        // Step 3: middle 必须能被 s3 整除
+        if (Math.abs(middle % s3) > 1e-9) continue;
+        const groups3 = middle / s3;
+        const outputStart = groups3 * g3;
+        const profit = outputStart - inputStart;
+
+        if (profit >= 1) {
+          result.feasible = {
+            k,
+            input: inputStart,
+            prophecy,
+            middle,
+            output: outputStart,
+            profit
+          };
+          break;
+        }
+      }
+
+      return result;
+    }
+
+    function formatNumber(x) {
+      return Math.abs(x - Math.round(x)) < 1e-6 ? Math.round(x) : parseFloat(x.toFixed(6));
+    }
+
+    function calculateAll() {
+      // 路径 A 输入
+      const a_s1 = parseFloat(document.getElementById('a_spend1').value);
+      const a_g1 = parseFloat(document.getElementById('a_get1').value);
+      const a_s2 = parseFloat(document.getElementById('a_spend2').value);
+      const a_g2 = parseFloat(document.getElementById('a_get2').value);
+      const a_s3 = parseFloat(document.getElementById('a_spend3').value);
+      const a_g3 = parseFloat(document.getElementById('a_get3').value);
+
+      // 路径 B 输入
+      const b_s1 = parseFloat(document.getElementById('b_spend1').value);
+      const b_g1 = parseFloat(document.getElementById('b_get1').value);
+      const b_s2 = parseFloat(document.getElementById('b_spend2').value);
+      const b_g2 = parseFloat(document.getElementById('b_get2').value);
+      const b_s3 = parseFloat(document.getElementById('b_spend3').value);
+      const b_g3 = parseFloat(document.getElementById('b_get3').value);
+
+      const resA = calculatePath(a_s1, a_g1, a_s2, a_g2, a_s3, a_g3, '混沌');
+      const resB = calculatePath(b_s1, b_g1, b_s2, b_g2, b_s3, b_g3, '神圣');
+
+      let html = '<h3>📊 计算结果</h3>';
+
+      // 路径 A
+      html += `<h4>路径 A（混沌 → 预兆 → 神圣 → 混沌）</h4>`;
+      html += `理论利润率: ${(resA.profitRate * 100).toFixed(3)}% （1 混沌 → ${formatNumber(resA.theoreticalOutput)} 混沌）<br>`;
+      if (resA.profitRate <= 0) {
+        html += '<span class="loss">❌ 无套利空间</span>';
+      } else if (resA.feasible) {
+        const f = resA.feasible;
+        html += `
+          <span class="profit">✅ 找到整数方案（k=${f.k}）：</span><br>
+          投入 ${formatNumber(f.input)} 混沌 
+          → ${formatNumber(f.prophecy)} 预兆 
+          → ${formatNumber(f.middle)} 神圣 
+          → ${formatNumber(f.output)} 混沌<br>
+          净利润：+${Math.round(f.profit)} 混沌石
+        `;
+      } else {
+        html += '<span class="loss">⚠️ 理论可盈利，但 k≤1000 内无整数解</span>';
+      }
+
+      html += '<hr style="margin:20px 0;border:0;border-top:1px dashed #ccc;">';
+
+      // 路径 B
+      html += `<h4>路径 B（神圣 → 预兆 → 混沌 → 神圣）</h4>`;
+      html += `理论利润率: ${(resB.profitRate * 100).toFixed(3)}% （1 神圣 → ${formatNumber(resB.theoreticalOutput)} 神圣）<br>`;
+      if (resB.profitRate <= 0) {
+        html += '<span class="loss">❌ 无套利空间</span>';
+      } else if (resB.feasible) {
+        const f = resB.feasible;
+        html += `
+          <span class="profit">✅ 找到整数方案（k=${f.k}）：</span><br>
+          投入 ${formatNumber(f.input)} 神圣 
+          → ${formatNumber(f.prophecy)} 预兆 
+          → ${formatNumber(f.middle)} 混沌 
+          → ${formatNumber(f.output)} 神圣<br>
+          净利润：+${Math.round(f.profit)} 神圣石
+        `;
+      } else {
+        html += '<span class="loss">⚠️ 理论可盈利，但 k≤1000 内无整数解</span>';
+      }
+
+      document.getElementById('result').innerHTML = html;
+    }
+
+    // 初始计算
+    window.onload = calculateAll;
+  </script>
+</body>
+</html>
+
+
